@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite
+.ipynb_checkpoints/
+
+# Env / Tools
+*.env
+.env
+.venv/
+env/
+venv/
+ENV/
+.coverage
+.pytest_cache/
+.mypy_cache/
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
