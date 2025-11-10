@@ -14,5 +14,5 @@ python -m weather_api --city "São Paulo" --country BR --lang pt --provider open
 # OpenWeather (needs key / precisa chave)
 # Windows (persiste):
 setx OPENWEATHER_API_KEY "SUA_CHAVE_AQUI"
-# Abra novo PowerShell e execute:
+# Abra novo PowerShell e execute o código:
 python -m weather_api --city "São Paulo" --country BR --lang pt --provider openweather --hourly 6 --daily 3
