@@ -1,24 +1,64 @@
 import requests
+import unicodedata
 
 class OpenMeteoProvider:
     def __init__(self, lang="en", units=None):
         self.lang = lang
         self.units = units or {"temp": "celsius", "wind": "kmh"}
 
+    def _strip_accents(self, s: str) -> str:
+        # remove acentos para fallback ("São Paulo" -> "Sao Paulo")
+        return "".join(
+            c for c in unicodedata.normalize("NFKD", s) if not unicodedata.combining(c)
+        )
+
     def geocode(self, city, country=None):
-        q = city if not country else f"{city},{country}"
-        url = "https://geocoding-api.open-meteo.com/v1/search"
-        r = requests.get(url, params={"name": q, "count": 1, "language": self.lang})
-        if r.status_code != 200:
+        """
+        Estratégia:
+        1) Consultar por 'name=city' (sem país), count=5, language=self.lang.
+        2) Se 'country' foi informado, filtrar client-side por 'country_code'.
+        3) Se não encontrou, tentar fallback sem acentos.
+        4) Escolher o primeiro resultado restante.
+        """
+        base_url = "https://geocoding-api.open-meteo.com/v1/search"
+        country = (country or "").strip().upper() or None
+
+        def query(name_value):
+            r = requests.get(
+                base_url,
+                params={"name": name_value, "count": 5, "language": self.lang},
+                timeout=10,
+            )
+            if r.status_code != 200:
+                return []
+            data = r.json() or {}
+            return data.get("results") or []
+
+        # 1) tentativa direta
+        results = query(city)
+
+        # 2) se nada, tenta sem acentos
+        if not results:
+            results = query(self._strip_accents(city))
+
+        if not results:
             return None
-        data = r.json()
-        if not data.get("results"):
-            return None
-        it = data["results"][0]
-        name = f"{it.get('name')}, {it.get('country_code')}"
-        return {"lat": it["latitude"], "lon": it["longitude"], "name": name}
+
+        # 3) filtro por país (se fornecido)
+        chosen = None
+        if country:
+            for it in results:
+                if (it.get("country_code") or "").upper() == country:
+                    chosen = it
+                    break
+        if not chosen:
+            chosen = results[0]
+
+        name = f"{chosen.get('name')}, {chosen.get('country_code')}"
+        return {"lat": chosen["latitude"], "lon": chosen["longitude"], "name": name}
 
     def fetch(self, location, hours=0, days=0):
+        # ... (mantenha o resto do arquivo igual)
         url = "https://api.open-meteo.com/v1/forecast"
         params = {
             "latitude": location["lat"],
@@ -30,7 +70,7 @@ class OpenMeteoProvider:
             "temperature_unit": "fahrenheit" if self.units["temp"]=="fahrenheit" else "celsius",
             "wind_speed_unit": "mph" if self.units["wind"]=="mph" else "kmh",
         }
-        r = requests.get(url, params=params)
+        r = requests.get(url, params=params, timeout=10)
         r.raise_for_status()
         j = r.json()
 
@@ -39,7 +79,7 @@ class OpenMeteoProvider:
             "feels_like": "-",
             "humidity": f"{j['current']['relative_humidity_2m']}%",
             "wind": f"{j['current']['wind_speed_10m']} {self.units['wind']}",
-            "description": "—",  # sem texto no endpoint básico
+            "description": "—",
         }
 
         hourly = []
