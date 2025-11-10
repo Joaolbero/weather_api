@@ -1,18 +1,18 @@
-# Weather API CLI / Consulta de Clima via API
+# 🌦️ Weather API CLI (Consulta de Clima via API)
 
-**EN:** Command-line tool using **Open-Meteo** (no API key) or **OpenWeather** (API key).  
-**PT-BR:** Ferramenta de linha de comando usando **Open-Meteo** (sem chave) ou **OpenWeather** (com chave).
+Projeto em Python que consulta o clima atual e a previsão para as próximas horas ou dias.  
+Ele funciona direto pelo terminal (linha de comando).
 
-## Quickstart / Início Rápido
+## 🔧 Funcionalidades
+- Consulta clima usando duas APIs diferentes:
+  - **Open-Meteo** → não precisa de chave de API.
+  - **OpenWeather** → precisa da variável de ambiente `OPENWEATHER_API_KEY`.
+- Mostra clima atual, previsão por horas e dias.
+- Suporte a português e inglês.
+
+---
+
+## ⚙️ Instalação (sem venv, direto no Python global)
+Abra o PowerShell na pasta do projeto e rode:
 ```bash
-# Install deps globally / Instale deps globalmente
 pip install -r requirements.txt
-
-# Open-Meteo (no key / sem chave)
-python -m weather_api --city "São Paulo" --country BR --lang pt --provider open-meteo --hourly 6 --daily 3
-
-# OpenWeather (needs key / precisa chave)
-# Windows (persiste):
-setx OPENWEATHER_API_KEY "SUA_CHAVE_AQUI"
-# Abra novo PowerShell e execute o código:
-python -m weather_api --city "São Paulo" --country BR --lang pt --provider openweather --hourly 6 --daily 3
